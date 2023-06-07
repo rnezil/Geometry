@@ -39,10 +39,13 @@ class interval {
 			real_type other_upper = other.upper();
 
 			// Perform calculations with appropriate rounding modes
-			assert( !std::fesetround(FE_DOWNWARD) );
+			set_round_down();
 			lower_ = this_lower + other_lower;
-			assert( !std::fesetround(FE_UPWARD) );
+			set_round_up();
 			upper_ = this_upper + other_upper;
+
+			// Record arithmetic operation
+			record_arithmetic_op();
 
 			// Restore users rounding mode
 			assert( !std::fesetround(user_rounding_mode) );
@@ -60,10 +63,13 @@ class interval {
 			real_type other_upper = other.upper();
 
 			// Perform calculations with appropriate rounding modes
-			assert( !std::fesetround(FE_DOWNWARD) );
+			set_round_down();
 			lower_ = this_lower - other_upper;
-			assert( !std::fesetround(FE_UPWARD) );
+			set_round_up();
 			upper_ = this_upper - other_lower;
+
+			// Record arithmetic operation
+			record_arithmetic_op();
 
 			// Restore users rounding mode
 			assert( !std::fesetround(user_rounding_mode) );
@@ -168,20 +174,49 @@ class interval {
 					upper_ = zero();
 			}
 			
+			// Record arithmetic operation
+			record_arithmetic_op();
+
 			// Restore users rounding mode
 			assert( !std::fesetround(user_rounding_mode) );
 			return *this;
 		}
 
-		real_type lower() const { return lower_bound; }
+		real_type lower() const { return lower_; }
 
-		real_type upper() const { return upper_bound; }
+		real_type upper() const { return upper_; }
+
+		bool is_singleton const { return upper() == lower(); }
+
+		int sign() const {
+			if( upper() < 0 ) {
+				return -1;
+			}else if( (lower() >= 0) && (upper() > 0) ) {
+				return 1;
+			}else if( (lower() == 0) && (upper() == 0) ) {
+				return 0;
+			}else {
+				// Record indeterminate result and throw exception
+				record_indeterminate_result();
+				throw indeterminate_result {"Cannot determine sign of interval"};
+			}
+		}
+
+		static void clear_statistics() {
+			statistics_.indeterminate_result_count = 0;
+			statistics_.arithmetic_op_count = 0;
+		}
+
+		static void get_statistics( statistics& stat ) { stat = statistics_; }
 	private:
 		real_type lower_;
 		real_type upper_;
+		static statistics statistics_ {0,0};
 
 		static real_type zero() { return real_type(0); }
 		static void set_round_down() { assert( !std::fesetround(FE_DOWNWARD) ); }
 		static void set_round_up() { assert( !std::fesetround(FE_UPWARD) ); }
+		static void record_indeterminate_result() { ++(statistics_.indeterminate_result_count); }
+		static void record_arithmetic_op() { ++(statistics_.arithmetic_op_count); }
 };
 }
