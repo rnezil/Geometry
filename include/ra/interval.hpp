@@ -186,7 +186,7 @@ class interval {
 
 		real_type upper() const { return upper_; }
 
-		bool is_singleton const { return upper() == lower(); }
+		bool is_singleton() const { return upper() == lower(); }
 
 		int sign() const {
 			if( upper() < 0 ) {
@@ -208,10 +208,12 @@ class interval {
 		}
 
 		static void get_statistics( statistics& stat ) { stat = statistics_; }
+
+		bool operator == ( const interval& other ) const { return (upper() == other.upper()) && (lower() == other.lower()); }
 	private:
 		real_type lower_;
 		real_type upper_;
-		static statistics statistics_ {0,0};
+		static inline statistics statistics_ {0,0};
 
 		static real_type zero() { return real_type(0); }
 		static void set_round_down() { assert( !std::fesetround(FE_DOWNWARD) ); }
