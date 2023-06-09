@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cfenv>
 #include <cassert>
+#include <iostream>
 
 namespace ra::math{
 struct indeterminate_result : public std::runtime_error
@@ -87,89 +88,84 @@ class interval {
 			real_type other_upper = other.upper();
 
 			// Create 8-bit lookup table for upcoming switch
-			char lookup(0);
-
-			// bit 0: this interval contains values equal to or less than zero
-			lookup |= (upper() <= 0);
-
-			// bit 1: this interval contains positive and negative values
-			lookup |= ((lower() < 0) && (upper() > 0)) << 1;
-
-			// bit 2: this interval contains values equal to or greater than zero
-			lookup |= (lower() >= 0) << 2;
-
-			// bit 3: this interval is pure zero
-			lookup |= ((lookup & 0x01) & ((lookup & 0x04) >> 2)) << 3;
-
-			// bit 4: other interval contains values equal to or less than zero
-			lookup |= (other.upper() <= 0) << 4;
-
-			// bit 5: other interval contains positive and negative values
-			lookup |= ((other.lower() < 0) && (other.upper() > 0)) << 5;
-
-			// bit 6: other interval contains values equal to or greater than zero
-			lookup |= (other.lower() >= 0) << 6;
-
-			// bit 7: other interval is pure zero
-			lookup |= ((lookup & 0x10) & ((lookup & 0x40) >> 2)) << 3;
+			char lookup = get_mul_lookup_table_for( other );
 
 			// Perform calculations with appropriate rounding modes
 			switch( lookup ) {
 				case (char)0x11:
 					// both negative
+					//std::cout << *this << '\n' << other << '\n' << "both negative" << "\n\n";
 					set_round_down();
 					lower_ = this_upper * other_upper;
 					set_round_up();
 					upper_ = this_lower * other_lower;
+					break;
 				case (char)0x21:
 					// this negative other both
+					//std::cout << *this << '\n' << other << '\n' << "this negative other both" << "\n\n";
 					set_round_down();
 					lower_ = this_lower * other_upper;
 					set_round_up();
 					upper_ = this_lower * other_lower;
+					break;
 				case (char)0x41:
 					// this negative other positive
+					//std::cout << *this << '\n' << other << '\n' << "this negative other positive" << "\n\n";
 					set_round_down();
 					lower_ = this_lower * other_upper;
 					set_round_up();
 					upper_ = this_upper * other_lower;
+					break;
 				case (char)0x12:
 					// this both other negative
+					//std::cout << *this << '\n' << other << '\n' << "this both other negative" << "\n\n";
 					set_round_down();
 					lower_ = this_upper * other_lower;
 					set_round_up();
 					upper_ = this_lower * other_lower;
+					break;
 				case (char)0x22:
 					// both both
+					//std::cout << *this << '\n' << other << '\n' << "both both" << "\n\n";
 					set_round_down();
 					lower_ = (this_lower * other_upper < this_upper * other_lower) ? (this_lower * other_upper) : (this_upper * other_lower);
 					set_round_up();
 					upper_ = (this_lower * other_lower > this_upper * other_upper) ? (this_lower * other_lower) : (this_upper * other_upper);
+					break;
 				case (char)0x42:
 					// this both other positive
+					//std::cout << *this << '\n' << other << '\n' << "this both other positive" << "\n\n";
 					set_round_down();
 					lower_ = this_lower * other_upper;
 					set_round_up();
 					upper_ = this_upper * other_upper;
+					break;
 				case (char)0x14:
 					// this positive other negative
+					//std::cout << *this << '\n' << other << '\n' << "this positive other negative" << "\n\n";
 					set_round_down();
 					lower_ = this_upper * other_lower;
 					set_round_up();
 					upper_ = this_lower * other_upper;
+					break;
 				case (char)0x24:
 					// this positive other both
+					//std::cout << *this << '\n' << other << '\n' << "this positive other both" << "\n\n";
 					set_round_down();
 					lower_ = this_upper * other_lower;
 					set_round_up();
 					upper_ = this_upper * other_upper;
+					break;
 				case (char)0x44:
 					// this positive other positive
+					//std::cout << *this << '\n' << other << '\n' << "both positive" << "\n\n";
 					set_round_down();
 					lower_ = this_lower * other_lower;
 					set_round_up();
 					upper_ = this_upper * other_upper;
+					break;
 				default:
+					//std::cout << *this << '\n' << other << '\n' << "this or other zero" << "\n\n";
 					lower_ = zero();
 					upper_ = zero();
 			}
@@ -210,15 +206,73 @@ class interval {
 		static void get_statistics( statistics& stat ) { stat = statistics_; }
 
 		bool operator == ( const interval& other ) const { return (upper() == other.upper()) && (lower() == other.lower()); }
+
+		char get_mul_lookup_table_for( const interval& other ) const {
+			// Initialize lookup table to all zeros
+			char lookup(0);
+
+			// bit 0: this interval contains values equal to or less than zero
+			lookup |= (upper() <= 0);
+
+			// bit 1: this interval contains positive and negative values
+			lookup |= ((lower() < 0) && (upper() > 0)) << 1;
+
+			// bit 2: this interval contains values equal to or greater than zero
+			lookup |= (lower() >= 0) << 2;
+
+			// bit 3: this interval is pure zero
+			lookup |= ((lookup & 0x01) & ((lookup & 0x04) >> 2)) << 3;
+
+			// bit 4: other interval contains values equal to or less than zero
+			lookup |= (other.upper() <= 0) << 4;
+
+			// bit 5: other interval contains positive and negative values
+			lookup |= ((other.lower() < 0) && (other.upper() > 0)) << 5;
+
+			// bit 6: other interval contains values equal to or greater than zero
+			lookup |= (other.lower() >= 0) << 6;
+
+			// bit 7: other interval is pure zero
+			lookup |= ((lookup & 0x10) & ((lookup & 0x40) >> 2)) << 3;
+
+			return lookup;
+		}
+		
+		static real_type zero() { return real_type(0); }
+		
+		static void set_round_down() { assert( !std::fesetround(FE_DOWNWARD) ); }
+		
+		static void set_round_up() { assert( !std::fesetround(FE_UPWARD) ); }
+		
+		static void record_indeterminate_result() { ++(statistics_.indeterminate_result_count); }
+		static void record_arithmetic_op() { ++(statistics_.arithmetic_op_count); }
+
 	private:
 		real_type lower_;
 		real_type upper_;
 		static inline statistics statistics_ {0,0};
-
-		static real_type zero() { return real_type(0); }
-		static void set_round_down() { assert( !std::fesetround(FE_DOWNWARD) ); }
-		static void set_round_up() { assert( !std::fesetround(FE_UPWARD) ); }
-		static void record_indeterminate_result() { ++(statistics_.indeterminate_result_count); }
-		static void record_arithmetic_op() { ++(statistics_.arithmetic_op_count); }
 };
+/*
+template<typename T>
+interval operator + ( const interval<T>& A, const interval<T>& B ) {
+}
+
+template<typename T>
+interval operator - ( const interval<T>& A, const interval<T>& B ) {
+}
+
+template<typename T>
+interval operator * ( const interval<T>& A, const interval<T>& B ) {
+}
+*/
+
+template<typename T>
+std::ostream& operator << ( std::ostream& out, const interval<T>& insertee ) {
+	out << '[';
+	out << insertee.lower();
+	out << ',';
+	out << insertee.upper();
+	out << ']';
+	return out;
+}
 }
