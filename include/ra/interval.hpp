@@ -252,19 +252,155 @@ class interval {
 		real_type upper_;
 		static inline statistics statistics_ {0,0};
 };
-/*
+
 template<typename T>
-interval operator + ( const interval<T>& A, const interval<T>& B ) {
+interval<T> operator + ( const interval<T>& A, const interval<T>& B ) {
+	// Store users current rounding mode
+	int user_rounding_mode = std::fegetround();
+
+	// Declare variables to store result
+	T result_lower;
+	T result_upper;
+
+	// Perform calculations with appropriate rounding modes
+	interval<T>::set_round_down();
+	result_lower = A.lower() + B.lower();
+	interval<T>::set_round_up();
+	result_upper = A.upper() + B.upper();
+
+	// Record arithmetic operation
+	interval<T>::record_arithmetic_op();
+
+	// Restore users rounding mode
+	assert( !std::fesetround(user_rounding_mode) );
+	
+	return interval<T>( result_lower, result_upper );
 }
 
 template<typename T>
-interval operator - ( const interval<T>& A, const interval<T>& B ) {
+interval<T> operator - ( const interval<T>& A, const interval<T>& B ) {
+	// Store users current rounding mode
+	int user_rounding_mode = std::fegetround();
+
+	// Declare variables to hold return value
+	T result_lower;
+	T result_upper;
+
+	// Perform calculations with appropriate rounding modes
+	interval<T>::set_round_down();
+	result_lower = A.lower() - B.upper();
+	interval<T>::set_round_up();
+	result_upper = A.upper() - B.lower();
+
+	// Record arithmetic operation
+	interval<T>::record_arithmetic_op();
+
+	// Restore users rounding mode
+	assert( !std::fesetround(user_rounding_mode) );
+	
+	return interval<T>( result_lower, result_upper );
 }
 
 template<typename T>
-interval operator * ( const interval<T>& A, const interval<T>& B ) {
+interval<T> operator * ( const interval<T>& A, const interval<T>& B ) {
+	// Store users current rounding mode
+	int user_rounding_mode = std::fegetround();
+
+	// Declare variables to hold return value
+	T result_lower;
+	T result_upper;
+
+	// Create 8-bit lookup table for upcoming switch
+	char lookup = A.get_mul_lookup_table_for( B );
+
+	// Perform calculations with appropriate rounding modes
+	switch( lookup ) {
+		case (char)0x11:
+			// both negative
+			//std::cout << *this << '\n' << other << '\n' << "both negative" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.upper() * B.upper();
+			interval<T>::set_round_up();
+			result_upper = A.lower() * B.lower();
+			break;
+		case (char)0x21:
+			// this negative other both
+			//std::cout << *this << '\n' << other << '\n' << "this negative other both" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.lower() * B.upper();
+			interval<T>::set_round_up();
+			result_upper = A.lower() * B.lower();
+			break;
+		case (char)0x41:
+			// this negative other positive
+			//std::cout << *this << '\n' << other << '\n' << "this negative other positive" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.lower() * B.upper();
+			interval<T>::set_round_up();
+			result_upper = A.upper() * B.lower();
+			break;
+		case (char)0x12:
+			// this both other negative
+			//std::cout << *this << '\n' << other << '\n' << "this both other negative" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.upper() * B.lower();
+			interval<T>::set_round_up();
+			result_upper = A.lower() * B.lower();
+			break;
+		case (char)0x22:
+			// both both
+			//std::cout << *this << '\n' << other << '\n' << "both both" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = (A.lower() * B.upper() < A.upper() * B.lower()) ? (A.lower() * B.upper()) : (A.upper() * B.lower());
+			interval<T>::set_round_up();
+			result_upper = (A.lower() * B.lower() > A.upper() * B.upper()) ? (A.lower() * B.lower()) : (A.upper() * B.upper());
+			break;
+		case (char)0x42:
+			// this both other positive
+			//std::cout << *this << '\n' << other << '\n' << "this both other positive" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.lower() * B.upper();
+			interval<T>::set_round_up();
+			result_upper = A.upper() * B.upper();
+			break;
+		case (char)0x14:
+			// this positive other negative
+			//std::cout << *this << '\n' << other << '\n' << "this positive other negative" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.upper() * B.lower();
+			interval<T>::set_round_up();
+			result_upper = A.lower() * B.upper();
+			break;
+		case (char)0x24:
+			// this positive other both
+			//std::cout << *this << '\n' << other << '\n' << "this positive other both" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.upper() * B.lower();
+			interval<T>::set_round_up();
+			result_upper = A.upper() * B.upper();
+			break;
+		case (char)0x44:
+			// this positive other positive
+			//std::cout << *this << '\n' << other << '\n' << "both positive" << "\n\n";
+			interval<T>::set_round_down();
+			result_lower = A.lower() * B.lower();
+			interval<T>::set_round_up();
+			result_upper = A.upper() * B.upper();
+			break;
+		default:
+			//std::cout << *this << '\n' << other << '\n' << "this or other zero" << "\n\n";
+			result_lower = interval<T>::zero();
+			result_upper = interval<T>::zero();
+	}
+			
+	// Record arithmetic operation
+	interval<T>::record_arithmetic_op();
+
+	// Restore users rounding mode
+	assert( !std::fesetround(user_rounding_mode) );
+	
+	return interval<T>( result_lower, result_upper );
 }
-*/
 
 template<typename T>
 std::ostream& operator << ( std::ostream& out, const interval<T>& insertee ) {

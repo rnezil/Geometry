@@ -92,3 +92,52 @@ TEMPLATE_TEST_CASE("Check *= operator", "[operator]", float, double, long double
 	CHECK( pp == xerox );
 }
 
+TEMPLATE_TEST_CASE("Check * operator", "[operator]", float, double, long double) {
+	ra::math::interval a {-2,-1};
+	ra::math::interval b {-1, 1};
+	ra::math::interval c {1, 2};
+	
+	ra::math::interval a2 {-2,-1};
+	ra::math::interval b2 {-1, 1};
+	ra::math::interval c2 {1, 2};
+	ra::math::interval aa2 {-2,-1};
+	ra::math::interval bb2 {-1, 1};
+	ra::math::interval cc2 {1, 2};
+	ra::math::interval aaa2 {-2,-1};
+	ra::math::interval bbb2 {-1, 1};
+	ra::math::interval ccc2 {1, 2};
+	ra::math::interval aaaa2 {-2,-1};
+	ra::math::interval bbbb2 {-1, 1};
+	ra::math::interval aaaaa2 {-2,-1};
+
+	CHECK( a * a == (a2 *= a2) );
+	CHECK( a * b == (aa2 *= b2) );
+	CHECK( a * c == (aaa2 *= c2) );
+	CHECK( b * a == (b2 *= aaaa2) );
+	CHECK( b * b == (bb2 *= bb2) );
+	CHECK( b * c == (bbb2 *= c2) );
+	CHECK( c * a == (c2 *= aaaaa2) );
+	CHECK( c * b == (cc2 *= bbbb2) );
+	CHECK( c * c == (ccc2 *= ccc2) );
+}
+
+TEMPLATE_TEST_CASE(" Check +, +=, -, and -= operators", "[operator]", float, double, long double) {
+	ra::math::interval a {-32.67, 69.42};
+	ra::math::interval b {59.59, 100.3};
+	ra::math::interval c {-10000.5, 1.1218};
+
+	ra::math::interval a2 {-32.67, 69.42};
+	ra::math::interval b2 {59.59, 100.3};
+	ra::math::interval c2 {-10000.5, 1.1218};
+
+	ra::math::interval a3 {-32.67, 69.42};
+	ra::math::interval b3 {59.59, 100.3};
+	ra::math::interval c3 {-10000.5, 1.1218};
+
+	CHECK( a + b == (a2 += b2) );
+	CHECK( b + c == (b2 += c2) );
+	CHECK( c + c == (c2 += c2) );
+	CHECK( c - a == (c3 -= a3) );
+	CHECK( a - b == (a3 -= b3) );
+	CHECK( b - b == (b3 -= b3) );
+}
