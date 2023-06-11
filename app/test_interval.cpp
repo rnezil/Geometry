@@ -141,3 +141,47 @@ TEMPLATE_TEST_CASE(" Check +, +=, -, and -= operators", "[operator]", float, dou
 	CHECK( a - b == (a3 -= b3) );
 	CHECK( b - b == (b3 -= b3) );
 }
+
+TEMPLATE_TEST_CASE("Check is_singleton and sign", "[function]", float, double, long double) {
+	ra::math::interval a {-4.20};
+	ra::math::interval b {6.9};
+	ra::math::interval c {0.0};
+	ra::math::interval d {-2.2, 3.3};
+	ra::math::interval e {-49.999, -48.888};
+	ra::math::interval f {50.1, 100.2};
+	ra::math::interval g {0.0, 0.000};
+
+	CHECK( a.is_singleton() == true );
+	CHECK( b.is_singleton() == true );
+	CHECK( c.is_singleton() == true );
+	CHECK( d.is_singleton() == false);
+	CHECK( e.is_singleton() == false);
+	CHECK( f.is_singleton() == false);
+	CHECK( a.sign() == -1 );
+	CHECK( b.sign() == 1 );
+	CHECK( c.sign() == 0 );
+	try{
+		int exc = d.sign();
+	}catch( ra::math::indeterminate_result& e ){
+		std::cout << "Caught an exception.\n";
+	}
+	CHECK( e.sign() == -1 );
+	CHECK( f.sign() == 1 );
+	CHECK( g.sign() == 0 );
+	CHECK( g.is_singleton() == true );
+}
+
+TEMPLATE_TEST_CASE("Test < operator", "[operator]", float, double, long double) {
+	ra::math::interval a {-90.3, -80.4};
+	ra::math::interval b {-80.4, 0.0};
+	ra::math::interval c {-85.1, -77.7};
+	ra::math::interval d {-120.2, -112.1};
+
+	CHECK( d < a );
+	CHECK( !(b < a) );
+	try{
+		bool rachel = a < c;
+	}catch( ra::math::indeterminate_result& e ) {
+		std::cout << "Exception from < operation caught.\t" << e.what() << '\n';
+	}
+}

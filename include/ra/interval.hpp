@@ -403,6 +403,16 @@ interval<T> operator * ( const interval<T>& A, const interval<T>& B ) {
 }
 
 template<typename T>
+bool operator < ( const interval<T>& A, const interval<T>& B ) {
+	if( (A.upper() < B.lower()) || (A.lower() >= B.upper()) ) {
+		return A.upper() < B.lower();
+	}else {
+		interval<T>::record_indeterminate_result();
+		throw indeterminate_result {"Cannot determine result of less-than comparison"};
+	}
+}
+
+template<typename T>
 std::ostream& operator << ( std::ostream& out, const interval<T>& insertee ) {
 	out << '[';
 	out << insertee.lower();
