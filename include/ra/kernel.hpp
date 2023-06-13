@@ -149,6 +149,23 @@ class Kernel {
 		}
 	}
 
+	bool is_strictly_convex_quad( const Point& a, const Point& b,
+			const Point& c, const Point& d ) {
+
+		// Precondition: vertices a,b,c,d have distinct values
+		// and are given in counterclockwise order
+
+		if( (static_cast<int>(orientation(a,b,c)) == 1)
+				&& (static_cast<int>(orientation(b,c,d)) == 1)
+				&& (static_cast<int>(orientation(c,d,a)) == 1)
+				&& (static_cast<int>(orientation(d,a,b)) == 1) )
+		{
+			return true;
+		}else{
+			return false;
+		}
+	}
+
 	static void printstat() {
 		std::cout << '\n';
 		std::cout << "Orientation total count:\t\t" << statistics_.orientation_total_count << '\n';
@@ -159,7 +176,6 @@ class Kernel {
 		std::cout << "Side of oriented circle exact count:\t" << statistics_.side_of_oriented_circle_exact_count << '\n';
 		std::cout << '\n';
 	}
-
 
 	private:
 	

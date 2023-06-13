@@ -27,5 +27,16 @@ int main(){
 	vec v(-1,1);
 	std::cout << geokernel.preferred_direction(a,b,c,d,v) << '\n';
 	show;
+	point sq1(0,0);
+	point sq2(7,0);
+	point sq3(7,7);
+	point sq4(0,7);
+	std::cout << "Is a square strictly convex? ";
+	std::cout << geokernel.is_strictly_convex_quad(sq1,sq2,sq3,sq4);
+	std::cout << '\n';
+	std::cout << "Is an hourglass strictly convex? ";
+	std::cout << geokernel.is_strictly_convex_quad(sq1,sq3,sq2,sq4);
+	std::cout <<'\n';
+	show;
 	return 0;
 }
