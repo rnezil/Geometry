@@ -38,5 +38,17 @@ int main(){
 	std::cout << geokernel.is_strictly_convex_quad(sq1,sq3,sq2,sq4);
 	std::cout <<'\n';
 	show;
+	point q1(5,2);
+	point q2(0,1);
+	point q3(5,0);
+	point q4(10,1);
+	point q5(5.15,1);
+	std::cout << "Is a diamond locally Delaunay? ";
+	std::cout << geokernel.is_locally_delaunay_edge(q1,q2,q3,q4);
+	std::cout << '\n';
+	std::cout << "Is an arrowhead locally Delaunay? ";
+	std::cout << geokernel.is_locally_delaunay_edge(q1,q2,q3,q5);
+	std::cout << '\n';
+	show;
 	return 0;
 }

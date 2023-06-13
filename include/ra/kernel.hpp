@@ -166,6 +166,21 @@ class Kernel {
 		}
 	}
 
+	bool is_locally_delaunay_edge( const Point& a, const Point& b,
+			const Point& c, const Point& d ) {
+		// Precondition: a,b,c,d have dinstinct values and
+		// the shape they form is strictly convex
+
+		// if e is not locally Delaunay, then e' is
+		// if a,b,c,d are cocircular, e and e' both locally Delaunay
+
+		if( static_cast<int>(side_of_oriented_circle(a,b,c,d)) > 0 ){
+			return false;
+		}else{
+			return true;
+		}
+	}
+
 	static void printstat() {
 		std::cout << '\n';
 		std::cout << "Orientation total count:\t\t" << statistics_.orientation_total_count << '\n';
