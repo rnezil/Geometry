@@ -12,12 +12,6 @@ class Kernel {
 	// The type used to represent real numbers.
 	using Real = R;
 
-	// The type used to perform interval arithmetic.
-	using Interval = ra::math::interval<R>;
-
-	// The type used to perform exact arithmetic.
-	using Exact = CGAL::MP_Float;
-
 	// The type used to represent points in two dimensions.
 	using Point = typename CGAL::Cartesian<R>::Point_2;
 
@@ -120,6 +114,67 @@ class Kernel {
 		}
 	}
 
+	Oriented_side side_of_oriented_circle( const Point& a, const Point& b, const Point& c, const Point& d ) {
+		// Convert each point to singleton intervals and calculate z value
+		Interval ax(a.x());
+		Interval ay(a.y());
+		Interval az = (ax * ax) + (ay * ay);
+
+		Interval bx(b.x());
+		Interval by(b.y());
+		Interval bz = (bx * bx) + (by * by);
+
+		Interval cx(c.x());
+		Interval cy(c.y());
+		Interval cz = (cx * cx) + (cy * cy);
+
+		Interval dx(d.x());
+		Interval dy(d.y());
+		Interval dz = (dx * dx) + (dy * dy);
+
+		// Compute determinant
+		Interval det = detfor_orient3d(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz);
+
+		// Record side of oriented circle test
+		did_side_of_oriented_circle();
+
+		try{
+			return Oriented_side(det.sign());
+		}catch( ra::math::indeterminate_result& e ) {
+			// Convert each point to singleton intervals and calculate z value
+			Exact ax(a.x());
+			Exact ay(a.y());
+			Exact az = (ax * ax) + (ay * ay);
+
+			Exact bx(b.x());
+			Exact by(b.y());
+			Exact bz = (bx * bx) + (by * by);
+
+			Exact cx(c.x());
+			Exact cy(c.y());
+			Exact cz = (cx * cx) + (cy * cy);
+
+			Exact dx(d.x());
+			Exact dy(d.y());
+			Exact dz = (dx * dx) + (dy * dy);
+
+			// Compute determinant
+			Exact det = detfor_orient3d(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz);
+
+			// Record exact side of oriented circle test
+			did_exact_side_of_oriented_circle();
+
+			// Conditional return
+			if( det > Exact(0) ){
+				return Oriented_side(1);
+			}else if( det < Exact(0) ){
+				return Oriented_side(-1);
+			}else{
+				return Oriented_side(0);
+			}
+		}
+	}
+
 	static void printstat() {
 		std::cout << '\n';
 		std::cout << "Orientation total count:\t\t" << statistics_.orientation_total_count << '\n';
@@ -135,6 +190,21 @@ class Kernel {
 	private:
 	
 	static inline Statistics statistics_ {0,0,0,0,0,0};
+
+	// The type used to perform interval arithmetic.
+	using Interval = ra::math::interval<R>;
+
+	// The type used to perform exact arithmetic.
+	using Exact = CGAL::MP_Float;
+
+	template<class T>
+	T detfor_orient3d ( const T& ax, const T& ay, const T& az, const T& bx, const T& by,
+			const T& bz, const T& cx, const T& cy, const T& cz, const T& dx,
+			const T& dy, const T& dz) {
+		return ( ((ax - dx) * (((by - dy) * (cz - dz)) - ((bz - dz) * (cy - dy))))
+			- ((bx - dx) * (((ay - dy) * (cz - dz)) - ((az - dz) * (cy - dy))))
+			+ ((cx - dx) * (((ay - dy) * (bz - dz)) - ((az - dz) * (by - dy)))) );
+	}
 
 	static void did_orientation(){ ++(statistics_.orientation_total_count); }
 	static void did_exact_orientation(){ ++(statistics_.orientation_exact_count); }
