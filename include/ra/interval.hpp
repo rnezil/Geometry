@@ -187,7 +187,7 @@ class interval {
 		int sign() const {
 			if( upper() < 0 ) {
 				return -1;
-			}else if( (lower() >= 0) && (upper() > 0) ) {
+			}else if( lower() > 0 ) {
 				return 1;
 			}else if( (lower() == 0) && (upper() == 0) ) {
 				return 0;

@@ -1,33 +1,38 @@
 #Specify minimum cmake version requirement
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1 FATAL_ERROR)
 
-#Set compiler flags variable to allow for longer loops
-set(EXTRA_COMPILE_FLAGS "-frounding-math")
-
 #Specify project name and languages
 project(arithmetic LANGUAGES CXX)
 
-#Option for code sanitization
-#include(../Sanitizers.cmake)
-
-#Globally include 'include' directory
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+#Set compiler flags variable to allow for longer loops
+set(EXTRA_COMPILE_FLAGS "-frounding-math")
 
 #Create variable for interval arithmetic headers
 set(interval_headers ${CMAKE_CURRENT_SOURCE_DIR}/include/ra/interval.hpp)
 
-#Create vrariable for cexpr_mandelbrot header
-#set(mandelbrot_headers ${CMAKE_CURRENT_SOURCE_DIR}/include/ra/mandelbrot.hpp)
+#Create variable for kernel headers
+set(kernel_headers ${CMAKE_CURRENT_SOURCE_DIR}/include/ra/kernel.hpp)
 
-#Add executable targets
-add_executable(test_interval ${CMAKE_CURRENT_SOURCE_DIR}/app/test_interval.cpp ${interval_headers})
-#add_executable( test_mandelbrot ${CMAKE_CURRENT_SOURCE_DIR}/app/test_mandelbrot.cpp ${mandelbrot_headers})
+#Force CGAL to not warn about CMake build type
+set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 
-#Make sure interval arithmetic gets compiler flags for floating-point environmental changes
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/app/test_interval.cpp PROPERTIES COMPILE_FLAGS ${EXTRA_COMPILE_FLAGS})
+#Add compiler options
+add_compile_options(${EXTRA_COMPILE_FLAGS})
 
-#Find Catch2 package
+#Find packages
 find_package(Catch2 REQUIRED)
+find_package(CGAL REQUIRED)
 
 #Include Catch2 header
 include(Catch)
+
+#Globally include 'include' directory
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+#Add executable targets
+add_executable(test_interval ${CMAKE_CURRENT_SOURCE_DIR}/app/test_interval.cpp ${interval_headers})
+add_executable(test_kernel ${CMAKE_CURRENT_SOURCE_DIR}/app/test_kernel.cpp ${kernel_headers})
+
+#Link libraries and include target-specific directories
+target_include_directories(test_kernel PUBLIC ${CGAL_INCLUDE_DIRS})
+target_link_libraries(test_kernel ${CGAL_LIBRARY})
