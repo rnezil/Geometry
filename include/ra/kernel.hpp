@@ -67,44 +67,24 @@ class Kernel {
 	Kernel(Kernel&&) = default;
 	Kernel& operator=(Kernel&&) = default;
 
-	// Useful member functions begin here.
-
 	Orientation orientation( const Point& a, const Point& b, const Point& c ){
-		//line pointing from a to b: turn left to see c? turn right to see c? collinear?
-		
-		// Convert each point to singleton intervals
-		Interval ax(a.x());
-		Interval ay(a.y());
-		Interval bx(b.x());
-		Interval by(b.y());
-		Interval cx(c.x());
-		Interval cy(c.y());
-		
-		// Calculate determinant
-		Interval result = (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
-		
-		// Record orientation test
+
+		// Record orientation
 		did_orientation();
 
 		try{
+			// Compute result as interval
+			Interval result = get_orientation_result<Interval>(a,b,c);
 			return Orientation(result.sign());
-		}catch( ra::math::indeterminate_result& e ){
-			// Collect values for exact arithmetic
-			Exact ax(a.x());
-			Exact ay(a.y());
-			Exact bx(b.x());
-			Exact by(b.y());
-			Exact cx(c.x());
-			Exact cy(c.y());
+		}
+		catch( ra::math::indeterminate_result& e ){
 
-			// Calculate determinant
-			Exact result = ((ax - cx) * (by - cy)) - ((ay - cy) * (bx - cx));
-
-			// Record exact orientation test
+			// Record exact orientation
 			did_exact_orientation();
 
-			// Conditional return
-			if( result > Exact(0) ){
+			// Compute exact result
+			Exact result = get_orientation_result<Exact>(a,b,c);
+			if( Exact(0) < result ){
 				return Orientation(1);
 			}else if( result < Exact(0) ){
 				return Orientation(-1);
@@ -115,62 +95,56 @@ class Kernel {
 	}
 
 	Oriented_side side_of_oriented_circle( const Point& a, const Point& b, const Point& c, const Point& d ) {
-		// Convert each point to singleton intervals and calculate z value
-		Interval ax(a.x());
-		Interval ay(a.y());
-		Interval az = (ax * ax) + (ay * ay);
-
-		Interval bx(b.x());
-		Interval by(b.y());
-		Interval bz = (bx * bx) + (by * by);
-
-		Interval cx(c.x());
-		Interval cy(c.y());
-		Interval cz = (cx * cx) + (cy * cy);
-
-		Interval dx(d.x());
-		Interval dy(d.y());
-		Interval dz = (dx * dx) + (dy * dy);
-
-		// Compute determinant
-		Interval det = detfor_orient3d(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz);
 
 		// Record side of oriented circle test
 		did_side_of_oriented_circle();
 
 		try{
-			return Oriented_side(det.sign());
-		}catch( ra::math::indeterminate_result& e ) {
-			// Convert each point to singleton intervals and calculate z value
-			Exact ax(a.x());
-			Exact ay(a.y());
-			Exact az = (ax * ax) + (ay * ay);
-
-			Exact bx(b.x());
-			Exact by(b.y());
-			Exact bz = (bx * bx) + (by * by);
-
-			Exact cx(c.x());
-			Exact cy(c.y());
-			Exact cz = (cx * cx) + (cy * cy);
-
-			Exact dx(d.x());
-			Exact dy(d.y());
-			Exact dz = (dx * dx) + (dy * dy);
-
-			// Compute determinant
-			Exact det = detfor_orient3d(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz);
+			// Compute result as interval
+			Interval result = get_side_of_oriented_circle_result<Interval>(a,b,c,d);
+			return Oriented_side(result.sign());
+		}
+		catch( ra::math::indeterminate_result& e ) {
 
 			// Record exact side of oriented circle test
 			did_exact_side_of_oriented_circle();
 
-			// Conditional return
-			if( det > Exact(0) ){
+			// Compute exact result
+			Exact result = get_side_of_oriented_circle_result<Exact>(a,b,c,d);
+			if( Exact(0) < result ){
 				return Oriented_side(1);
-			}else if( det < Exact(0) ){
+			}else if( result < Exact(0) ){
 				return Oriented_side(-1);
 			}else{
 				return Oriented_side(0);
+			}
+		}
+	}
+
+	int preferred_direction( const Point& a, const Point& b,
+			const Point& c, const Point& d, const Vector& v ) {
+		
+		// Record preferred direction test
+		did_preferred_direction();
+
+		try{
+			// Compute result as interval
+			Interval result = get_preferred_direction_result<Interval>(a,b,c,d,v);
+			return(result.sign());
+		}
+		catch( ra::math::indeterminate_result& e ){
+
+			// Record exact preferred direction test
+			did_exact_preferred_direction();
+
+			// Compute exact result
+			Exact result = get_preferred_direction_result<Exact>(a,b,c,d,v);
+			if( Exact(0) < result ){
+				return 1;
+			}else if( result < Exact(0) ){
+				return -1;
+			}else{
+				return 0;
 			}
 		}
 	}
@@ -198,9 +172,73 @@ class Kernel {
 	using Exact = CGAL::MP_Float;
 
 	template<class T>
+	T get_orientation_result( const Point& a, const Point& b, const Point& c ) const {
+		T ax(a.x());
+		T ay(a.y());
+		T bx(b.x());
+		T by(b.y());
+		T cx(c.x());
+		T cy(c.y());
+		
+		// Calculate and return determinant
+		return ( (ax - cx) * (by - cy) - (ay - cy) * (bx - cx) );
+	}
+
+	template<class T>
+	T get_side_of_oriented_circle_result( const Point& a, const Point& b, const Point& c,
+			const Point& d ) const {
+		T ax(a.x());
+		T ay(a.y());
+		T az = (ax * ax) + (ay * ay);
+
+		T bx(b.x());
+		T by(b.y());
+		T bz = (bx * bx) + (by * by);
+
+		T cx(c.x());
+		T cy(c.y());
+		T cz = (cx * cx) + (cy * cy);
+
+		T dx(d.x());
+		T dy(d.y());
+		T dz = (dx * dx) + (dy * dy);
+
+		// Compute determinant
+		return detfor_orient3d(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz);
+	}
+		
+	template<class T>
+	T get_preferred_direction_result( const Point& a, const Point& b, const Point& c, 
+			const Point& d, const Vector& v ) const {
+		T ax(a.x());
+		T ay(a.y());
+
+		T bx(b.x());
+		T by(b.y());
+
+		T cx(c.x());
+		T cy(c.y());
+
+		T dx(d.x());
+		T dy(d.y());
+
+		T vx(v.x());
+		T vy(v.y());
+
+		T atob_mag2 = ((bx - ax) * (bx - ax)) + ((by - ay) * (by - ay));
+		T ctod_mag2 = ((dx - cx) * (dx - cx)) + ((dy - cy) * (dy - cy));
+
+		T atob_dotv = ((bx - ax) * vx) + ((by - ay) * vy);
+		T ctod_dotv = ((dx - cx) * vx) + ((dy - cy) * vy);
+
+		return ( (ctod_mag2 * atob_dotv * atob_dotv)
+			- (atob_mag2 * ctod_dotv * ctod_dotv) );
+	}
+
+	template<class T>
 	T detfor_orient3d ( const T& ax, const T& ay, const T& az, const T& bx, const T& by,
 			const T& bz, const T& cx, const T& cy, const T& cz, const T& dx,
-			const T& dy, const T& dz) {
+			const T& dy, const T& dz) const {
 		return ( ((ax - dx) * (((by - dy) * (cz - dz)) - ((bz - dz) * (cy - dy))))
 			- ((bx - dx) * (((ay - dy) * (cz - dz)) - ((az - dz) * (cy - dy))))
 			+ ((cx - dx) * (((ay - dy) * (bz - dz)) - ((az - dz) * (by - dy)))) );
