@@ -210,10 +210,28 @@ class Kernel {
 		}
 		else
 		{
-			return false:
+			return false;
 		}
 
 		assert(false);
+	}
+
+	static void clear_statistics() {
+		statistics_.orientation_total_count = 0;
+		statistics_.orientation_exact_count = 0;
+		statistics_.preferred_direction_total_count = 0;
+		statistics_.preferred_direction_exact_count = 0;
+		statistics_.side_of_oriented_circle_total_count = 0;
+		statistics_.side_of_oriented_circle_exact_count = 0;
+	}
+
+	static void get_statistics( Statistics& statistics ) {
+		statistics.orientation_total_count = statistics_.orientation_total_count;
+		statistics.orientation_exact_count = statistics_.orientation_exact_count;
+		statistics.preferred_direction_total_count = statistics_.preferred_direction_total_count;
+		statistics.preferred_direction_exact_count = statistics_.preferred_direction_exact_count;
+		statistics.side_of_oriented_circle_total_count = statistics_.side_of_oriented_circle_total_count;
+		statistics.side_of_oriented_circle_exact_count = statistics_.side_of_oriented_circle_exact_count;
 	}
 
 	static void printstat() {

@@ -50,5 +50,19 @@ int main(){
 	std::cout << geokernel.is_locally_delaunay_edge(q1,q2,q3,q5);
 	std::cout << '\n';
 	show;
+	ra::geometry::Kernel<float>::Statistics stats;
+	ra::geometry::Kernel<float>::get_statistics(stats);
+	std::cout << "Copied statistics:\n\n";
+	std::cout << '\n';
+		std::cout << "Orientation total count:\t\t" << stats.orientation_total_count << '\n';
+		std::cout << "Orientation exact count:\t\t" << stats.orientation_exact_count << '\n';
+		std::cout << "Preferred direction total count:\t" << stats.preferred_direction_total_count << '\n';
+		std::cout << "Preferred direction exact count:\t" << stats.preferred_direction_exact_count << '\n';
+		std::cout << "Side of oriented circle total count:\t" << stats.side_of_oriented_circle_total_count << '\n';
+		std::cout << "Side of oriented circle exact count:\t" << stats.side_of_oriented_circle_exact_count << '\n';
+		std::cout << '\n';
+	ra::geometry::Kernel<float>::clear_statistics();
+	std::cout << "Cleared statistics.\n\n";
+	show;
 	return 0;
 }
