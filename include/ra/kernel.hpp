@@ -181,6 +181,41 @@ class Kernel {
 		}
 	}
 
+	bool is_locally_pd_delaunay_edge( const Point& a, const Point& b,
+			const Point& c, const Point& d, const Vector& u,
+			const Vector& v ) {
+
+		// Precondition: a,b,c,d have distinct values and
+		// the vectors u and v are not zero vectors, and
+		// are neither parallel nor orthogonal
+
+		// it is always the case that either e or e' has the
+		// preferred direction locally Delaunay property
+
+		if( static_cast<int>(side_of_oriented_circle(a,b,c,d)) < 0 ) 
+		{
+			return true;
+		}
+
+		if( static_cast<int>(side_of_oriented_circle(a,b,c,d)) > 0 )
+		{
+			return false;
+		}
+
+		if( (preferred_direction(c,a,b,d,u) > 0) ||
+				( (preferred_direction(c,a,b,d,u) == 0) &&
+				  (preferred_direction(c,a,b,d,v) > 0) ) )
+		{
+			return true;
+		}
+		else
+		{
+			return false:
+		}
+
+		assert(false);
+	}
+
 	static void printstat() {
 		std::cout << '\n';
 		std::cout << "Orientation total count:\t\t" << statistics_.orientation_total_count << '\n';
