@@ -32,7 +32,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 #Add executable targets
 add_executable(test_interval ${CMAKE_CURRENT_SOURCE_DIR}/app/test_interval.cpp ${interval_headers})
 add_executable(test_kernel ${CMAKE_CURRENT_SOURCE_DIR}/app/test_kernel.cpp ${kernel_headers})
+add_executable(tri_demo ${CMAKE_CURRENT_SOURCE_DIR}/app/triangulation_2_demo.cpp ${CMAKE_CURRENT_SOURCE_DIR}/app/triangulation_2.hpp)
+add_executable(delaunay_triangulation ${CMAKE_CURRENT_SOURCE_DIR}/app/delaunay_triangulation.cpp ${kernel_headers} ${CMAKE_CURRENT_SOURCE_DIR}/app/triangulation_2.hpp)
 
 #Link libraries and include target-specific directories
 target_include_directories(test_kernel PUBLIC ${CGAL_INCLUDE_DIRS})
 target_link_libraries(test_kernel ${CGAL_LIBRARY})
+target_include_directories(tri_demo PUBLIC ${CGAL_INCLUDE_DIRS})
+target_include_directories(tri_demo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(tri_demo ${CGAL_LIBRARY})
+target_include_directories(delaunay_triangulation PUBLIC ${CGAL_INCLUDE_DIRS})
+target_include_directories(delaunay_triangulation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(delaunay_triangulation ${CGAL_LIBRARY})

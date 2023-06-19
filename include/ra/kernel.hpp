@@ -18,6 +18,9 @@ class Kernel {
 	// The type used to represent vectors in two dimensions.
 	using Vector = typename CGAL::Cartesian<R>::Vector_2;
 
+	// Bug fix needed for triangulation_2.hpp to work
+	using Point_2 = Point;
+
 	// The possible outcomes of an orientation test.
 	enum class Orientation : int {
 		right_turn = -1,
