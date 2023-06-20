@@ -178,6 +178,155 @@ class interval {
 			return *this;
 		}
 
+		interval& operator +=( const interval& other ) {
+			// Store users current rounding mode
+			int user_rounding_mode = std::fegetround();
+
+			// Legacy code from non-const version
+			real_type this_lower = lower();
+			real_type this_upper = upper();
+			real_type other_lower = other.lower();
+			real_type other_upper = other.upper();
+
+			// Perform calculations with appropriate rounding modes
+			set_round_down();
+			lower_ = this_lower + other_lower;
+			set_round_up();
+			upper_ = this_upper + other_upper;
+
+			// Record arithmetic operation
+			record_arithmetic_op();
+
+			// Restore users rounding mode
+			assert( !std::fesetround(user_rounding_mode) );
+			return *this;
+		}
+
+		interval& operator -=( const interval& other ) {
+			// Store users current rounding mode
+			int user_rounding_mode = std::fegetround();
+
+			// Legacy code from non-const version
+			real_type this_lower = lower();
+			real_type this_upper = upper();
+			real_type other_lower = other.lower();
+			real_type other_upper = other.upper();
+
+			// Perform calculations with appropriate rounding modes
+			set_round_down();
+			lower_ = this_lower - other_upper;
+			set_round_up();
+			upper_ = this_upper - other_lower;
+
+			// Record arithmetic operation
+			record_arithmetic_op();
+
+			// Restore users rounding mode
+			assert( !std::fesetround(user_rounding_mode) );
+			return *this;
+		}
+
+		interval& operator *=( const interval& other ) {
+			// Store users current rounding mode
+			int user_rounding_mode = std::fegetround();
+
+			// Legacy code from non-const version
+			real_type this_lower = lower();
+			real_type this_upper = upper();
+			real_type other_lower = other.lower();
+			real_type other_upper = other.upper();
+
+			// Create 8-bit lookup table for upcoming switch
+			char lookup = get_mul_lookup_table_for( other );
+
+			// Perform calculations with appropriate rounding modes
+			switch( lookup ) {
+				case (char)0x11:
+					// both negative
+					//std::cout << *this << '\n' << other << '\n' << "both negative" << "\n\n";
+					set_round_down();
+					lower_ = this_upper * other_upper;
+					set_round_up();
+					upper_ = this_lower * other_lower;
+					break;
+				case (char)0x21:
+					// this negative other both
+					//std::cout << *this << '\n' << other << '\n' << "this negative other both" << "\n\n";
+					set_round_down();
+					lower_ = this_lower * other_upper;
+					set_round_up();
+					upper_ = this_lower * other_lower;
+					break;
+				case (char)0x41:
+					// this negative other positive
+					//std::cout << *this << '\n' << other << '\n' << "this negative other positive" << "\n\n";
+					set_round_down();
+					lower_ = this_lower * other_upper;
+					set_round_up();
+					upper_ = this_upper * other_lower;
+					break;
+				case (char)0x12:
+					// this both other negative
+					//std::cout << *this << '\n' << other << '\n' << "this both other negative" << "\n\n";
+					set_round_down();
+					lower_ = this_upper * other_lower;
+					set_round_up();
+					upper_ = this_lower * other_lower;
+					break;
+				case (char)0x22:
+					// both both
+					//std::cout << *this << '\n' << other << '\n' << "both both" << "\n\n";
+					set_round_down();
+					lower_ = (this_lower * other_upper < this_upper * other_lower) ? (this_lower * other_upper) : (this_upper * other_lower);
+					set_round_up();
+					upper_ = (this_lower * other_lower > this_upper * other_upper) ? (this_lower * other_lower) : (this_upper * other_upper);
+					break;
+				case (char)0x42:
+					// this both other positive
+					//std::cout << *this << '\n' << other << '\n' << "this both other positive" << "\n\n";
+					set_round_down();
+					lower_ = this_lower * other_upper;
+					set_round_up();
+					upper_ = this_upper * other_upper;
+					break;
+				case (char)0x14:
+					// this positive other negative
+					//std::cout << *this << '\n' << other << '\n' << "this positive other negative" << "\n\n";
+					set_round_down();
+					lower_ = this_upper * other_lower;
+					set_round_up();
+					upper_ = this_lower * other_upper;
+					break;
+				case (char)0x24:
+					// this positive other both
+					//std::cout << *this << '\n' << other << '\n' << "this positive other both" << "\n\n";
+					set_round_down();
+					lower_ = this_upper * other_lower;
+					set_round_up();
+					upper_ = this_upper * other_upper;
+					break;
+				case (char)0x44:
+					// this positive other positive
+					//std::cout << *this << '\n' << other << '\n' << "both positive" << "\n\n";
+					set_round_down();
+					lower_ = this_lower * other_lower;
+					set_round_up();
+					upper_ = this_upper * other_upper;
+					break;
+				default:
+					//std::cout << *this << '\n' << other << '\n' << "this or other zero" << "\n\n";
+					lower_ = zero();
+					upper_ = zero();
+			}
+			
+			// Record arithmetic operation
+			record_arithmetic_op();
+
+			// Restore users rounding mode
+			assert( !std::fesetround(user_rounding_mode) );
+			return *this;
+		}
+
 		real_type lower() const { return lower_; }
 
 		real_type upper() const { return upper_; }
