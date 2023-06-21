@@ -268,7 +268,7 @@ class Kernel {
 		T cy(c.y());
 		
 		// Calculate and return determinant
-		return ( (ax - cx) * (by - cy) - (ay - cy) * (bx - cx) );
+		return ( ((ax - cx) * (by - cy)) - ((ay - cy) * (bx - cx)) );
 	}
 
 	template<class T>

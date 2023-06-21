@@ -11,41 +11,52 @@ using Triangulation = trilib::Triangulation_2<Kernel>;
 
 using Halfedge = Triangulation::Halfedge_handle;
 
-using Vertex = Triangulation::Vertex_handle;
-
 int main() {
 	Kernel predicator;
 	Triangulation trangle(std::cin);
-
-	std::unordered_set<Halfedge> true_optimals {};
+	
+	// Set to containly edges who are currently optimal but
+	// whose optimality status is subject to change
 	std::unordered_set<Halfedge> optimals {};
+
+	// Queue to contain suspect edges
 	std::queue<Halfedge> sus {};
+
+	// Iterate over all halfedges in the triangulation.
+	// Test if halfedge corresponds to a border edge; if
+	// so, do nothing at border edges are permanently
+	// optimal. Otherwise, test if edge is a strictly convex
+	// quadrilateral; if not, place into sus queue, otherwise
+	// place into optimals set.
 	for(auto iter = trangle.halfedges_begin(); iter != trangle.halfedges_end(); ++iter){
 		Halfedge h = &*iter;
-		if( h->is_border() || !predicator.is_strictly_convex_quad(
-				h->vertex()->point(),
-				h->next()->vertex()->point(),
-				h->opposite()->vertex()->point(),
-				h->opposite()->next()->vertex()->point()) ){
-			// If edge is unflippable put it in true_optimals set
-			// because its optimality can never change regardless
-			// of future edge flips.
-			true_optimals.insert(h);
-		}else{
-			// Place all flippable edges in sus queue.
-			sus.push(h);
+		if( !(h->is_border_edge()) ){
+			if( predicator.is_strictly_convex_quad(
+					h->vertex()->point(),
+					h->next()->vertex()->point(),
+					h->opposite()->vertex()->point(),
+					h->opposite()->next()->vertex()->point()) ) {
+				sus.push(h);
+			}else{
+				optimals.insert(h);
+			}
 		}
 	}
-	
-	// Initialize vectors for preferred direction delaunay testing.
+
+	// Ensure all edges are either fully in or fully out of
+	// optimals set, i.e. no cases where one halfedge is in
+	// and another is out.
+	for( auto ha : optimals )
+		if( optimals.find(ha->opposite()) != optimals.end() )
+			optimals.insert( ha->opposite() );
+
+	// Create vectors for preferred directions delaunay test
 	CGAL::Cartesian<double>::Vector_2 u(1,0);
 	CGAL::Cartesian<double>::Vector_2 v(1,1);
 
 	// Iterate over sus queue until empty.
 	while( !sus.empty() ) {
-		if( optimals.find(sus.front()) != optimals.end() ){
-			sus.pop();
-		}else if( !predicator.is_locally_pd_delaunay_edge(
+		if( !predicator.is_locally_pd_delaunay_edge(
 				sus.front()->opposite()->vertex()->point(),
 				sus.front()->opposite()->next()->vertex()->point(),
 				sus.front()->vertex()->point(),
@@ -88,12 +99,15 @@ int main() {
 				optimals.erase(optimals.find(sus.front()->opposite()->prev()->opposite()));
 			}
 		}else{
-			optimals.insert(sus.front());
-			optimals.insert(sus.front()->opposite());
+			// If edge satisfies preferred directions delaunay test
+			// then mark it as optimal.
+			optimals.insert( sus.front() );
+			optimals.insert( sus.front()->opposite() );
 			sus.pop();
 		}
 	}
 
+	// Output triangulation to stdout in OFF format.
 	trangle.output_off(std::cout);
-	return 0;
+	return std::cout ? 0 : 1;
 }
