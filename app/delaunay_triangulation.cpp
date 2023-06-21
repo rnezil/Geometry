@@ -62,9 +62,15 @@ int main() {
 				sus.front()->vertex()->point(),
 				sus.front()->next()->vertex()->point(),
 				u,
-				v ) ) {
-			// If edge fails locally preferred delaunay test,
-			// flip edge, place edge in optimals set.
+				v )
+		 && predicator.is_strictly_convex_quad(
+				sus.front()->vertex()->point(),
+				sus.front()->next()->vertex()->point(),
+				sus.front()->opposite()->vertex()->point(),
+				sus.front()->opposite()->next()->vertex()->point()) ) {
+			// If edge fails locally preferred delaunay test
+			// and is part of a strictly convex quadrilateral,
+			// then flip edge and place edge in optimals set.
 			trangle.flip_edge(sus.front());
 			optimals.insert(sus.front());
 			optimals.insert(sus.front()->opposite());
